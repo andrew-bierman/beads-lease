@@ -39,9 +39,8 @@ sole authority; beadle owns no state of its own.
   beadle release cpu-quiet-window -m done         release
 
 The legacy ` + "`lease`" + ` surface is kept: bare-resource claim, --status, --release.`,
-		SilenceUsage:      true,
-		SilenceErrors:     true,
-		CompletionOptions: cobra.CompletionOptions{HiddenDefaultCmd: true},
+		SilenceUsage:  true,
+		SilenceErrors: true,
 	}
 	root.PersistentFlags().BoolVarP(&jsonOut, "json", "j", false, "print one JSON envelope instead of text")
 	root.AddCommand(acquireCmd, releaseCmd, statusCmd, listCmd, heartbeatCmd, runCmd, versionCmd)
