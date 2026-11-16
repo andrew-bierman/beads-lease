@@ -1,4 +1,10 @@
+<!-- TODO(logo): drop the logo at docs/logo.png and uncomment — sent by Andrew, not yet on disk
+<p align="center"><img src="docs/logo.png" alt="beadle" width="180"></p>
+-->
+
 # beadle
+
+[![ci](https://github.com/andrew-bierman/beadle/actions/workflows/ci.yml/badge.svg)](https://github.com/andrew-bierman/beadle/actions/workflows/ci.yml)
 
 The fleet's keeper of leases. `beadle` keeps shared resources — machine-heavy
 work, measurement quiet windows, anything two agents might grab at once —
@@ -14,12 +20,13 @@ claims are the whole system.
 
 ## Install
 
-Needs Go 1.27+ (the dotfiles setup provisions `go` via mise) and the
-coordination hub at `~/Code/agent-coordination`.
-
 ```sh
-go build -o beadle .
-ln -sf "$PWD/beadle" ~/.local/bin/beadle
+# Release binaries (macOS / Linux, amd64 + arm64):
+#   grab beadle-<os>-<arch>.tar.gz from GitHub Releases, or:
+go install github.com/andrew-bierman/beadle@latest
+
+# From a clone (needs Go 1.27+, provisioned via mise in dotfiles setup):
+make install     # builds + links ~/.local/bin/beadle
 ```
 
 `lease` — the old name — keeps working: the dotfiles `bin/lease` shim execs
@@ -131,3 +138,7 @@ cover the need), and provider policies.
 - Sync before claiming on a different machine (`bin/coord sync --json`);
   `--wait` syncs while it polls.
 - Protocol: `dotfiles docs/guides/agent-resource-protocol.md`.
+
+## License
+
+[MIT](LICENSE)
