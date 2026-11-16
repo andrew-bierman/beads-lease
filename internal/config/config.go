@@ -68,73 +68,77 @@ func Path() string {
 // a broken config must not break the tool.
 func Load() *Config {
 	once.Do(func() {
-		loaded = Defaults()
-		path := Path()
-		raw, err := os.ReadFile(path)
-		if err != nil {
-			return // no config: defaults
-		}
-		overrides := map[string]any{}
-		if err := json.Unmarshal(raw, &overrides); err != nil {
-			loadWarn = fmt.Sprintf("config %s is not valid JSON (%v); using defaults", path, err)
-			return
-		}
-		// Overlay only recognized keys so a typo cannot silently rename
-		// behavior; unknown keys warn.
-		out := *loaded
-		known := map[string]struct{}{}
-		for _, k := range []string{"name", "tagline", "coordPath", "actorEnv", "resourcePrefix",
-			"titlePrefix", "defaultTTL", "contentionExit", "legacySurface",
-			"lowPriorityLinux", "lowPriorityDarwin", "protocolDoc"} {
-			known[k] = struct{}{}
-		}
-		for k := range overrides {
-			if _, ok := known[k]; !ok {
-				loadWarn = fmt.Sprintf("config %s: unknown key %q ignored", path, k)
-			}
-		}
-		if s, ok := overrides["name"].(string); ok && strings.TrimSpace(s) != "" {
-			out.Name = s
-		}
-		if s, ok := overrides["tagline"].(string); ok {
-			out.Tagline = s
-		}
-		if s, ok := overrides["coordPath"].(string); ok {
-			out.CoordPath = s
-		}
-		if s, ok := overrides["actorEnv"].(string); ok && strings.TrimSpace(s) != "" {
-			out.ActorEnv = s
-		}
-		if s, ok := overrides["resourcePrefix"].(string); ok && s != "" {
-			out.ResourcePrefix = s
-		}
-		if s, ok := overrides["titlePrefix"].(string); ok && s != "" {
-			out.TitlePrefix = s
-		}
-		if s, ok := overrides["defaultTTL"].(string); ok && s != "" {
-			out.DefaultTTL = s
-		}
-		if f, ok := overrides["contentionExit"].(float64); ok && f >= 0 && f <= 125 {
-			out.ContentionExit = int(f)
-		}
-		if b, ok := overrides["legacySurface"].(bool); ok {
-			out.LegacySurface = b
-		}
-		if s, ok := overrides["lowPriorityLinux"].(string); ok {
-			out.LowPriorityLinux = s
-		}
-		if s, ok := overrides["lowPriorityDarwin"].(string); ok {
-			out.LowPriorityDarwin = s
-		}
-		if s, ok := overrides["protocolDoc"].(string); ok {
-			out.ProtocolDoc = s
-		}
-		loaded = &out
+		loaded, loadWarn = loadFrom(Path())
 		if loadWarn != "" {
 			fmt.Fprintln(os.Stderr, "beadle: "+loadWarn)
 		}
 	})
 	return loaded
+}
+
+// loadFrom reads and overlays one config file. Warn is non-empty when the
+// file was invalid or carried unknown keys.
+func loadFrom(path string) (*Config, string) {
+	cfg := Defaults()
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return cfg, "" // no config: defaults
+	}
+	var overrides map[string]any
+	if err := json.Unmarshal(raw, &overrides); err != nil {
+		return cfg, fmt.Sprintf("config %s is not valid JSON (%v); using defaults", path, err)
+	}
+	// Overlay only recognized keys so a typo cannot silently rename
+	// behavior; unknown keys warn.
+	known := map[string]struct{}{}
+	for _, k := range []string{"name", "tagline", "coordPath", "actorEnv", "resourcePrefix",
+		"titlePrefix", "defaultTTL", "contentionExit", "legacySurface",
+		"lowPriorityLinux", "lowPriorityDarwin", "protocolDoc"} {
+		known[k] = struct{}{}
+	}
+	warn := ""
+	for k := range overrides {
+		if _, ok := known[k]; !ok {
+			warn = fmt.Sprintf("config %s: unknown key %q ignored", path, k)
+		}
+	}
+	if s, ok := overrides["name"].(string); ok && strings.TrimSpace(s) != "" {
+		cfg.Name = s
+	}
+	if s, ok := overrides["tagline"].(string); ok {
+		cfg.Tagline = s
+	}
+	if s, ok := overrides["coordPath"].(string); ok {
+		cfg.CoordPath = s
+	}
+	if s, ok := overrides["actorEnv"].(string); ok && strings.TrimSpace(s) != "" {
+		cfg.ActorEnv = s
+	}
+	if s, ok := overrides["resourcePrefix"].(string); ok && s != "" {
+		cfg.ResourcePrefix = s
+	}
+	if s, ok := overrides["titlePrefix"].(string); ok && s != "" {
+		cfg.TitlePrefix = s
+	}
+	if s, ok := overrides["defaultTTL"].(string); ok && s != "" {
+		cfg.DefaultTTL = s
+	}
+	if f, ok := overrides["contentionExit"].(float64); ok && f >= 0 && f <= 125 {
+		cfg.ContentionExit = int(f)
+	}
+	if b, ok := overrides["legacySurface"].(bool); ok {
+		cfg.LegacySurface = b
+	}
+	if s, ok := overrides["lowPriorityLinux"].(string); ok {
+		cfg.LowPriorityLinux = s
+	}
+	if s, ok := overrides["lowPriorityDarwin"].(string); ok {
+		cfg.LowPriorityDarwin = s
+	}
+	if s, ok := overrides["protocolDoc"].(string); ok {
+		cfg.ProtocolDoc = s
+	}
+	return cfg, warn
 }
 
 // ExpandHome resolves a leading ~ to HOME (config paths may use it).

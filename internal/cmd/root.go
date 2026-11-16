@@ -23,7 +23,8 @@ var (
 	currentRes string
 )
 
-const version = "0.1.0"
+// version is stamped at build time (-ldflags -X); keep as var, not const.
+var version = "0.1.0"
 
 func NewRootCmd(cfg *config.Config, invokedAs string) *cobra.Command {
 	if invokedAs == "" {
