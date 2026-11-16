@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/andrew-bierman/beadle/internal/cliutil"
+	"github.com/andrew-bierman/beadle/internal/config"
 	"github.com/andrew-bierman/beadle/internal/hub"
 	"github.com/andrew-bierman/beadle/internal/lease"
 )
@@ -120,13 +121,18 @@ func supervise(c *hub.Client, taskID string, argv []string, lowPriority bool) (i
 
 	execArgv := argv
 	if lowPriority {
+		cfg := config.Load()
+		var prefix []string
 		switch runtime.GOOS {
 		case "linux":
-			execArgv = append([]string{"nice", "-n", "10"}, argv...)
+			prefix = strings.Fields(cfg.LowPriorityLinux)
 		case "darwin":
-			execArgv = append([]string{"taskpolicy", "-c", "utility"}, argv...)
-		default:
-			fmt.Fprintf(os.Stderr, "beadle: --low-priority unsupported on %s; running unprioritized\n", runtime.GOOS)
+			prefix = strings.Fields(cfg.LowPriorityDarwin)
+		}
+		if len(prefix) == 0 {
+			fmt.Fprintf(os.Stderr, "%s: --low-priority unsupported on %s; running unprioritized\n", config.Load().Name, runtime.GOOS)
+		} else {
+			execArgv = append(prefix, argv...)
 		}
 	}
 
@@ -184,7 +190,7 @@ func childExitCode(c *exec.Cmd) int {
 
 func init() {
 	runCmd.Flags().StringVarP(&runResource, "resource", "r", "", "resource name (or pass positionally)")
-	runCmd.Flags().StringVarP(&runTTL, "ttl", "t", "15m", "advisory hold time (bd sets the real lease TTL)")
+	runCmd.Flags().StringVarP(&runTTL, "ttl", "t", "", "advisory hold time (default: config defaultTTL)")
 	runCmd.Flags().StringVarP(&runWait, "wait", "w", "0s", "wait up to this for a busy resource (e.g. 2m)")
 	runCmd.Flags().StringVarP(&runNote, "note", "m", "", "why you hold it")
 	runCmd.Flags().BoolVar(&runPriority, "low-priority", false,

@@ -59,7 +59,7 @@ var acquireCmd = &cobra.Command{
 
 func init() {
 	acquireCmd.Flags().StringVarP(&acquireResource, "resource", "r", "", "resource name (or pass positionally)")
-	acquireCmd.Flags().StringVarP(&acquireTTL, "ttl", "t", "15m", "advisory hold time (bd sets the real lease TTL)")
+	acquireCmd.Flags().StringVarP(&acquireTTL, "ttl", "t", "", "advisory hold time (default: config defaultTTL)")
 	acquireCmd.Flags().StringVarP(&acquireWait, "wait", "w", "0s", "wait up to this for a busy resource (e.g. 2m)")
 	acquireCmd.Flags().StringVarP(&acquireNote, "note", "m", "", "why you hold it")
 }

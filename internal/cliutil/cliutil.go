@@ -13,6 +13,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/andrew-bierman/beadle/internal/config"
 )
 
 const (
@@ -34,11 +36,11 @@ type E struct {
 func (e *E) Error() string { return e.Msg }
 
 func Contention(format string, a ...any) *E {
-	return &E{Code: ExitContention, Reason: "already-claimed", Msg: fmt.Sprintf(format, a...)}
+	return &E{Code: config.Load().ContentionExit, Reason: "already-claimed", Msg: fmt.Sprintf(format, a...)}
 }
 
 func NotYours(format string, a ...any) *E {
-	return &E{Code: ExitContention, Reason: "not-claim-holder", Msg: fmt.Sprintf(format, a...)}
+	return &E{Code: config.Load().ContentionExit, Reason: "not-claim-holder", Msg: fmt.Sprintf(format, a...)}
 }
 
 func Usagef(format string, a ...any) *E {
@@ -135,8 +137,12 @@ func Fail(env *Envelope, jsonMode bool, e *E) int {
 }
 
 // ParseTTL accepts "15m", "1h", "90s", or a bare integer meaning minutes.
+// Empty means the configured default TTL.
 func ParseTTL(s string) (time.Duration, error) {
 	s = strings.TrimSpace(s)
+	if s == "" {
+		s = config.Load().DefaultTTL
+	}
 	if s == "" {
 		return 15 * time.Minute, nil
 	}

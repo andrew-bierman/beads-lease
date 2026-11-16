@@ -6,13 +6,12 @@ package hub
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/andrew-bierman/beadle/internal/cliutil"
+	"github.com/andrew-bierman/beadle/internal/config"
 )
 
 // Task is the subset of a bd issue beadle reads.
@@ -56,28 +55,21 @@ type Client struct {
 	Coord string
 }
 
-// New verifies BEADS_ACTOR (identity is environment-provided, never stored)
-// and resolves the coord wrapper path.
+// New verifies the actor identity (environment-provided, never stored) and
+// resolves the coord wrapper path. Both come from configuration.
 func New() (*Client, error) {
-	if strings.TrimSpace(Actor()) == "" {
+	cfg := config.Load()
+	if cfg.Actor() == "" {
 		return nil, cliutil.Usagef(
-			"BEADS_ACTOR is not set; export BEADS_ACTOR=<agent-machine> (e.g. glm-andrew-bierman)")
+			"%s is not set; export %s=<agent-machine> (e.g. glm-andrew-bierman)",
+			cfg.ActorEnv, cfg.ActorEnv)
 	}
-	return &Client{Coord: coordPath()}, nil
+	return &Client{Coord: cfg.ResolveCoord()}, nil
 }
 
-// Actor is the claiming identity (BEADS_ACTOR, same as the hub itself).
-func Actor() string { return strings.TrimSpace(os.Getenv("BEADS_ACTOR")) }
-
-func coordPath() string {
-	if p := os.Getenv("BEADLE_COORD"); p != "" {
-		return p
-	}
-	if p := os.Getenv("FLEET_LEASE_COORD"); p != "" {
-		return p
-	}
-	return filepath.Join(os.Getenv("HOME"), "Code", "agent-coordination", "bin", "coord")
-}
+// Actor is the claiming identity (the configured actor env var; BEADS_ACTOR
+// is always accepted as a fallback).
+func Actor() string { return config.Load().Actor() }
 
 func (c *Client) run(args ...string) (string, error) {
 	cmd := exec.Command(c.Coord, args...)
@@ -186,6 +178,6 @@ func (c *Client) Sync() error {
 // Describe is the registry task's description on first registration.
 func Describe(key string) string {
 	return fmt.Sprintf(
-		"Fleet resource lease. Claim with beadle %s, release when done. "+
-			"Protocol: dotfiles docs/guides/agent-resource-protocol.md", key)
+		"Fleet resource lease. Claim with %s %s, release when done. Protocol: %s",
+		config.Load().Name, key, config.Load().ProtocolDoc)
 }

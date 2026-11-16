@@ -10,12 +10,15 @@ import (
 	"time"
 
 	"github.com/andrew-bierman/beadle/internal/cliutil"
+	"github.com/andrew-bierman/beadle/internal/config"
 	"github.com/andrew-bierman/beadle/internal/hub"
 )
 
-const (
-	Prefix      = "resource:"
-	TitlePrefix = "Resource lease: "
+// Prefix and TitlePrefix come from configuration so a rebrand is a config
+// edit, not a code change.
+var (
+	Prefix      = config.Load().ResourcePrefix
+	TitlePrefix = config.Load().TitlePrefix
 )
 
 // Ref is a normalized resource name.

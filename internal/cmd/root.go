@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"text/tabwriter"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/andrew-bierman/beadle/internal/cliutil"
+	"github.com/andrew-bierman/beadle/internal/config"
 )
 
 var (
@@ -23,22 +25,26 @@ var (
 
 const version = "0.1.0"
 
-func NewRootCmd() *cobra.Command {
+func NewRootCmd(cfg *config.Config, invokedAs string) *cobra.Command {
+	if invokedAs == "" {
+		invokedAs = cfg.Name
+	}
 	root := &cobra.Command{
-		Use:   "beadle",
-		Short: "beadle — the fleet's keeper of leases (resource claims over the Beads hub)",
-		Long: `beadle keeps the agent fleet's shared resources honestly held.
+		Use:   invokedAs,
+		Short: fmt.Sprintf("%s — %s", cfg.Name, cfg.Tagline),
+		Long: fmt.Sprintf(`%s keeps the agent fleet's shared resources honestly held.
 
 Claims are regular Beads claims on the coordination hub: atomic, leased
 (expiry + heartbeat + reclaim come from bd), cross-machine via git. bd is the
-sole authority; beadle owns no state of its own.
+sole authority; %s owns no state of its own.
 
-  beadle acquire cpu-quiet-window -t 15m          claim (registers on first use)
-  beadle run cpu-quiet-window -- pytest -n auto   claim, run, release on exit
-  beadle status | list                            who holds what
-  beadle release cpu-quiet-window -m done         release
+  %s acquire cpu-quiet-window -t 15m          claim (registers on first use)
+  %s run cpu-quiet-window -- pytest -n auto   claim, run, release on exit
+  %s status | list                            who holds what
+  %s release cpu-quiet-window -m done         release
 
-The legacy ` + "`lease`" + ` surface is kept: bare-resource claim, --status, --release.`,
+Identity and policy come from %s; naming is configurable there.`,
+			cfg.Name, cfg.Name, invokedAs, invokedAs, invokedAs, invokedAs, config.Path()),
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
@@ -47,11 +53,18 @@ The legacy ` + "`lease`" + ` surface is kept: bare-resource claim, --status, --r
 	return root
 }
 
-// Execute runs the CLI and returns the process exit code. It translates the
-// legacy `lease` surface (root --status/--release flags, bare-resource claim)
-// so old muscle memory and scripts keep working.
+// Execute runs the CLI and returns the process exit code. Identity (the
+// command name shown in help) comes from argv[0]; policy and naming come
+// from the config file. When the legacy surface is enabled it also
+// translates the old `lease` forms (root --status/--release flags,
+// bare-resource claim).
 func Execute(args []string) int {
-	if len(args) > 0 {
+	cfg := config.Load()
+	invokedAs := strings.TrimSuffix(filepath.Base(os.Args[0]), ".exe")
+	if invokedAs == "" || invokedAs == "main" {
+		invokedAs = cfg.Name
+	}
+	if cfg.LegacySurface && len(args) > 0 {
 		switch args[0] {
 		case "--status":
 			args[0] = "status"
@@ -63,7 +76,7 @@ func Execute(args []string) int {
 			}
 		}
 	}
-	root := NewRootCmd()
+	root := NewRootCmd(cfg, invokedAs)
 	root.SetArgs(args) // cobra defaults to os.Args[1:], ignoring the translation above
 	err := root.Execute()
 	if err == nil {
@@ -76,7 +89,7 @@ func Execute(args []string) int {
 		}
 		return cliutil.Fail(&cliutil.Envelope{Operation: currentOp, Resource: currentRes}, jsonOut, e)
 	}
-	fmt.Fprintf(os.Stderr, "beadle: %v\n", err)
+	fmt.Fprintf(os.Stderr, "%s: %v\n", cfg.Name, err)
 	return cliutil.ExitUsage
 }
 
@@ -91,9 +104,10 @@ func isKnown(s string) bool {
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "print beadle's version",
+	Short: "print version and identity",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		_, err := fmt.Printf("beadle %s (leases over the Beads hub; bd is the authority)\n", version)
+		cfg := config.Load()
+		_, err := fmt.Printf("%s %s — %s\n", cfg.Name, version, cfg.Tagline)
 		return err
 	},
 }

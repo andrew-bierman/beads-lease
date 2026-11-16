@@ -68,6 +68,37 @@ path; default `~/Code/agent-coordination/bin/coord`).
   the task note; bd configures the real lease TTL, and `status`/`list` show
   the live expiry.
 
+## Configuration
+
+Optional config at `~/.config/beadle/config.json` (override location with
+`BEADLE_CONFIG`); missing file = defaults. Identity, hub wiring and policy
+are all config — **a rename is an edit here, not a code change**, and the
+binary's help text follows the name it is invoked as (`argv[0]`):
+
+```json
+{
+  "name": "beadle",
+  "tagline": "the fleet's keeper of leases",
+  "coordPath": "~/Code/agent-coordination/bin/coord",
+  "actorEnv": "BEADS_ACTOR",
+  "resourcePrefix": "resource:",
+  "titlePrefix": "Resource lease: ",
+  "defaultTTL": "15m",
+  "contentionExit": 2,
+  "legacySurface": true,
+  "lowPriorityLinux": "nice -n 10",
+  "lowPriorityDarwin": "taskpolicy -c utility",
+  "protocolDoc": "dotfiles docs/guides/agent-resource-protocol.md"
+}
+```
+
+`contentionExit` is the exit code for already-claimed / not-yours (worklease
+convention: 2). `legacySurface` toggles the old `lease` forms (bare-resource
+claim, `--status`, `--release`). `coordPath`/`actorEnv` have env overrides
+that win: `BEADLE_COORD`/`FLEET_LEASE_COORD` and `BEADS_ACTOR`. See
+`config.example.json`. An invalid config file warns and falls back to
+defaults — a broken config never breaks the tool.
+
 ## Exit codes
 
 | Code | Meaning |

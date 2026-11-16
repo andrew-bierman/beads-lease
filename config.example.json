@@ -1,0 +1,15 @@
+{
+  "//": "Optional. Missing file = the defaults below. Copy to ~/.config/beadle/config.json. Identity, hub wiring and policy are all config — a rename is an edit here, not a code change.",
+  "name": "beadle",
+  "tagline": "the fleet's keeper of leases (resource claims over the Beads hub)",
+  "coordPath": "",
+  "actorEnv": "BEADS_ACTOR",
+  "resourcePrefix": "resource:",
+  "titlePrefix": "Resource lease: ",
+  "defaultTTL": "15m",
+  "contentionExit": 2,
+  "legacySurface": true,
+  "lowPriorityLinux": "nice -n 10",
+  "lowPriorityDarwin": "taskpolicy -c utility",
+  "protocolDoc": "dotfiles docs/guides/agent-resource-protocol.md"
+}
