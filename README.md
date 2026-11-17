@@ -1,5 +1,3 @@
-<p align="center"><img src="docs/logo.png" alt="beadle" width="200"></p>
-
 # beadle
 
 [![ci](https://github.com/andrew-bierman/beadle/actions/workflows/ci.yml/badge.svg)](https://github.com/andrew-bierman/beadle/actions/workflows/ci.yml)
