@@ -1,6 +1,4 @@
-<!-- TODO(logo): drop the logo at docs/logo.png and uncomment — sent by Andrew, not yet on disk
-<p align="center"><img src="docs/logo.png" alt="beadle" width="180"></p>
--->
+<p align="center"><img src="docs/logo.png" alt="beadle" width="200"></p>
 
 # beadle
 
