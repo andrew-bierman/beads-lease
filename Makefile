@@ -1,6 +1,6 @@
-BINARY := beadle
+BINARY := beads-lease
 VERSION := $(shell git describe --tags --always --dirty)
-LDFLAGS ?= -X github.com/andrew-bierman/beadle/internal/cmd.version=$(VERSION)
+LDFLAGS ?= -X github.com/andrew-bierman/beads-lease/internal/cmd.version=$(VERSION)
 
 .PHONY: build install test vet cross clean
 
@@ -17,7 +17,7 @@ test:
 vet:
 	go vet ./...
 
-# Release artifacts: beadle-<os>-<arch> tarballs + checksums in dist/.
+# Release artifacts: beads-lease-<os>-<arch> tarballs + checksums in dist/.
 cross:
 	mkdir -p dist
 	@for os in linux darwin; do \

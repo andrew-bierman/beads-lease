@@ -1,5 +1,5 @@
-// Package hub is beadle's Beads client. It shells out to the coordination
-// hub's bin/coord wrapper (bd + dolt) — beadle owns no state of its own; the
+// Package hub is beads-lease's Beads client. It shells out to the coordination
+// hub's bin/coord wrapper (bd + dolt) — beads-lease owns no state of its own; the
 // hub is the sole source of truth.
 package hub
 
@@ -10,11 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andrew-bierman/beadle/internal/cliutil"
-	"github.com/andrew-bierman/beadle/internal/config"
+	"github.com/andrew-bierman/beads-lease/internal/cliutil"
+	"github.com/andrew-bierman/beads-lease/internal/config"
 )
 
-// Task is the subset of a bd issue beadle reads.
+// Task is the subset of a bd issue beads-lease reads.
 type Task struct {
 	ID       string  `json:"id"`
 	Title    string  `json:"title"`

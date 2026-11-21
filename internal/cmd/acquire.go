@@ -5,9 +5,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/andrew-bierman/beadle/internal/cliutil"
-	"github.com/andrew-bierman/beadle/internal/hub"
-	"github.com/andrew-bierman/beadle/internal/lease"
+	"github.com/andrew-bierman/beads-lease/internal/cliutil"
+	"github.com/andrew-bierman/beads-lease/internal/hub"
+	"github.com/andrew-bierman/beads-lease/internal/lease"
 )
 
 var (
@@ -50,7 +50,7 @@ var acquireCmd = &cobra.Command{
 			ExpiresAt: t.LeaseExpires(),
 			TaskID:    t.ID,
 		}
-		text := fmt.Sprintf("resource:%s: claimed by %s%s. Release with: beadle release %s",
+		text := fmt.Sprintf("resource:%s: claimed by %s%s. Release with: beads-lease release %s",
 			r.Key, hub.Actor(), lease.ExpirySuffix(t), r.Key)
 		cliutil.Emit(env, jsonOut, text)
 		return nil

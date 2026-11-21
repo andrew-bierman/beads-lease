@@ -1,4 +1,4 @@
-module github.com/andrew-bierman/beadle
+module github.com/andrew-bierman/beads-lease
 
 go 1.27.4
 

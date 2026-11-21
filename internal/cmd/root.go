@@ -1,4 +1,4 @@
-// Package cmd wires beadle's CLI: worklease-style verbs over the Beads hub,
+// Package cmd wires beads-lease's CLI: worklease-style verbs over the Beads hub,
 // plus the legacy `lease` surface (bare-resource claim, --status/--release).
 package cmd
 
@@ -13,8 +13,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/andrew-bierman/beadle/internal/cliutil"
-	"github.com/andrew-bierman/beadle/internal/config"
+	"github.com/andrew-bierman/beads-lease/internal/cliutil"
+	"github.com/andrew-bierman/beads-lease/internal/config"
 )
 
 var (

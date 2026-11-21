@@ -13,10 +13,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/andrew-bierman/beadle/internal/cliutil"
-	"github.com/andrew-bierman/beadle/internal/config"
-	"github.com/andrew-bierman/beadle/internal/hub"
-	"github.com/andrew-bierman/beadle/internal/lease"
+	"github.com/andrew-bierman/beads-lease/internal/cliutil"
+	"github.com/andrew-bierman/beads-lease/internal/config"
+	"github.com/andrew-bierman/beads-lease/internal/hub"
+	"github.com/andrew-bierman/beads-lease/internal/lease"
 )
 
 var (
@@ -41,7 +41,7 @@ hold must not keep running.`,
 		currentOp = "run"
 		dash := cmd.ArgsLenAtDash()
 		if dash < 0 || dash >= len(args) {
-			return cliutil.Usagef("run needs a command after -- (beadle run <resource> -- <cmd...>)")
+			return cliutil.Usagef("run needs a command after -- (beads-lease run <resource> -- <cmd...>)")
 		}
 		argv := args[dash:]
 		res, ttlRaw, note := parseCompatArgs(args[:dash], runResource, runTTL, runNote)
@@ -69,7 +69,7 @@ hold must not keep running.`,
 		rc, lost := supervise(c, t.ID, argv, runPriority)
 
 		if err := lease.Release(c, r, fmt.Sprintf("run exited rc=%d", rc)); err != nil && !lost {
-			fmt.Fprintf(os.Stderr, "beadle: release failed: %v\n", err)
+			fmt.Fprintf(os.Stderr, "beads-lease: release failed: %v\n", err)
 		} else {
 			fmt.Fprintf(os.Stderr, "resource:%s: released (rc=%d)\n", r.Key, rc)
 		}
@@ -139,7 +139,7 @@ func supervise(c *hub.Client, taskID string, argv []string, lowPriority bool) (i
 	child := exec.Command(execArgv[0], execArgv[1:]...)
 	child.Stdin, child.Stdout, child.Stderr = os.Stdin, os.Stdout, os.Stderr
 	if err := child.Start(); err != nil {
-		fmt.Fprintf(os.Stderr, "beadle: %v\n", err)
+		fmt.Fprintf(os.Stderr, "beads-lease: %v\n", err)
 		return cliutil.ExitUsage, false
 	}
 
