@@ -1,7 +1,7 @@
-// Package cliutil carries beadle's shared conventions: exit-code families,
+// Package cliutil carries beads-lease's shared conventions: exit-code families,
 // the JSON envelope, duration parsing, and human time formatting.
 //
-// Exit codes follow the worklease families beadle deliberately copies:
+// Exit codes follow the worklease families beads-lease deliberately copies:
 //
 //	0 success; 1 internal failure; 2 ownership/contention;
 //	64 invalid input or configuration; 130 interrupted.
@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andrew-bierman/beadle/internal/config"
+	"github.com/andrew-bierman/beads-lease/internal/config"
 )
 
 const (
@@ -131,7 +131,7 @@ func Fail(env *Envelope, jsonMode bool, e *E) int {
 	} else if e.Code == ExitContention || e.Code == ExitUsage {
 		fmt.Fprintln(os.Stderr, e.Msg)
 	} else {
-		fmt.Fprintf(os.Stderr, "beadle: %s\n", e.Msg)
+		fmt.Fprintf(os.Stderr, "beads-lease: %s\n", e.Msg)
 	}
 	return e.Code
 }

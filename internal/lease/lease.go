@@ -1,4 +1,4 @@
-// Package lease is beadle's domain logic: register/claim/release/status/
+// Package lease is beads-lease's domain logic: register/claim/release/status/
 // heartbeat over hub tasks titled "Resource lease: <name>".
 package lease
 
@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andrew-bierman/beadle/internal/cliutil"
-	"github.com/andrew-bierman/beadle/internal/config"
-	"github.com/andrew-bierman/beadle/internal/hub"
+	"github.com/andrew-bierman/beads-lease/internal/cliutil"
+	"github.com/andrew-bierman/beads-lease/internal/config"
+	"github.com/andrew-bierman/beads-lease/internal/hub"
 )
 
 // Prefix and TitlePrefix come from configuration so a rebrand is a config
@@ -97,7 +97,7 @@ func Acquire(c *hub.Client, r Ref, ttl time.Duration, note string, wait time.Dur
 		}
 		if wait <= 0 || time.Now().After(deadline) {
 			return hub.Task{}, cliutil.Contention(
-				"resource:%s: already-claimed by %s%s — defer heavy work or message them (beadle status %s re-checks)",
+				"resource:%s: already-claimed by %s%s — defer heavy work or message them (beads-lease status %s re-checks)",
 				r.Key, h, ExpirySuffix(t), r.Key)
 		}
 		// Wait loop: re-check the local clone every 5s; git-sync the hub

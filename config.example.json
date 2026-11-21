@@ -1,6 +1,6 @@
 {
-  "//": "Optional. Missing file = the defaults below. Copy to ~/.config/beadle/config.json. Identity, hub wiring and policy are all config — a rename is an edit here, not a code change.",
-  "name": "beadle",
+  "//": "Optional. Missing file = the defaults below. Copy to ~/.config/beads-lease/config.json. Identity, hub wiring and policy are all config — a rename is an edit here, not a code change.",
+  "name": "beads-lease",
   "tagline": "the fleet's keeper of leases (resource claims over the Beads hub)",
   "coordPath": "",
   "actorEnv": "BEADS_ACTOR",

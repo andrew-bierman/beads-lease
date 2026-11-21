@@ -6,9 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/andrew-bierman/beadle/internal/cliutil"
-	"github.com/andrew-bierman/beadle/internal/hub"
-	"github.com/andrew-bierman/beadle/internal/lease"
+	"github.com/andrew-bierman/beads-lease/internal/cliutil"
+	"github.com/andrew-bierman/beads-lease/internal/hub"
+	"github.com/andrew-bierman/beads-lease/internal/lease"
 )
 
 var (

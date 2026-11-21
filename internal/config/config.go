@@ -1,4 +1,4 @@
-// Package config carries everything about beadle that might be renamed or
+// Package config carries everything about beads-lease that might be renamed or
 // retuned: its display identity, where the hub lives, registry conventions,
 // and policy knobs. Missing file = documented defaults; no config is required.
 package config
@@ -17,7 +17,7 @@ import (
 type Config struct {
 	Name              string `json:"name"`              // display name (help, version); the binary name itself comes from argv[0]
 	Tagline           string `json:"tagline"`           // one-line description shown in help/version
-	CoordPath         string `json:"coordPath"`         // hub wrapper (bin/coord); env BEADLE_COORD / FLEET_LEASE_COORD win
+	CoordPath         string `json:"coordPath"`         // hub wrapper (bin/coord); env BEADS_LEASE_COORD / FLEET_LEASE_COORD win
 	ActorEnv          string `json:"actorEnv"`          // identity env var; BEADS_ACTOR is always accepted too
 	ResourcePrefix    string `json:"resourcePrefix"`    // canonical resource id prefix
 	TitlePrefix       string `json:"titlePrefix"`       // registry task title prefix
@@ -32,7 +32,7 @@ type Config struct {
 // Defaults returns the shipped configuration.
 func Defaults() *Config {
 	return &Config{
-		Name:              "beadle",
+		Name:              "beads-lease",
 		Tagline:           "the fleet's keeper of leases (resource claims over the Beads hub)",
 		CoordPath:         "",
 		ActorEnv:          "BEADS_ACTOR",
@@ -53,14 +53,21 @@ var (
 	loadWarn string
 )
 
-// Path returns the config file location: $BEADLE_CONFIG, else
-// ~/.config/beadle/config.json. The location does not move when the tool is
-// renamed — the file's `name` field carries the identity instead.
+// Path prefers the new config location while retaining existing Beadle setups.
 func Path() string {
-	if p := os.Getenv("BEADLE_CONFIG"); p != "" {
-		return p
+	for _, key := range []string{"BEADS_LEASE_CONFIG", "BEADLE_CONFIG"} {
+		if p := os.Getenv(key); p != "" {
+			return p
+		}
 	}
-	return filepath.Join(os.Getenv("HOME"), ".config", "beadle", "config.json")
+	current := filepath.Join(os.Getenv("HOME"), ".config", "beads-lease", "config.json")
+	if _, err := os.Stat(current); os.IsNotExist(err) {
+		legacy := filepath.Join(os.Getenv("HOME"), ".config", "beadle", "config.json")
+		if _, err := os.Stat(legacy); err == nil {
+			return legacy
+		}
+	}
+	return current
 }
 
 // Load reads the config once per process. A missing file is fine (defaults);
@@ -70,7 +77,7 @@ func Load() *Config {
 	once.Do(func() {
 		loaded, loadWarn = loadFrom(Path())
 		if loadWarn != "" {
-			fmt.Fprintln(os.Stderr, "beadle: "+loadWarn)
+			fmt.Fprintln(os.Stderr, "beads-lease: "+loadWarn)
 		}
 	})
 	return loaded
@@ -152,9 +159,12 @@ func ExpandHome(p string) string {
 }
 
 // ResolveCoord returns the coordination hub wrapper path. Precedence:
-// env BEADLE_COORD, env FLEET_LEASE_COORD (historic), config coordPath,
+// env BEADS_LEASE_COORD, env BEADLE_COORD, env FLEET_LEASE_COORD, config coordPath,
 // then the default hub location.
 func (c *Config) ResolveCoord() string {
+	if p := os.Getenv("BEADS_LEASE_COORD"); p != "" {
+		return p
+	}
 	if p := os.Getenv("BEADLE_COORD"); p != "" {
 		return p
 	}
