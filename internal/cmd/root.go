@@ -51,7 +51,7 @@ Identity and policy come from %s; naming is configurable there.`,
 		SilenceErrors: true,
 	}
 	root.PersistentFlags().BoolVarP(&jsonOut, "json", "j", false, "print one JSON envelope instead of text")
-	root.AddCommand(acquireCmd, releaseCmd, statusCmd, listCmd, heartbeatCmd, runCmd, versionCmd)
+	root.AddCommand(acquireCmd, releaseCmd, statusCmd, listCmd, heartbeatCmd, runCmd, versionCmd, doctorCmd)
 	return root
 }
 
@@ -98,7 +98,7 @@ func Execute(args []string) int {
 func isKnown(s string) bool {
 	switch s {
 	case "acquire", "claim", "release", "status", "list", "ls",
-		"heartbeat", "run", "exec", "version", "help", "completion":
+		"heartbeat", "run", "exec", "version", "doctor", "help", "completion":
 		return true
 	}
 	return false
@@ -110,7 +110,7 @@ var versionCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg := config.Load()
 		if jsonOut {
-			b, _ := json.Marshal(map[string]any{"name": cfg.Name, "version": version, "api_version": 1})
+			b, _ := json.Marshal(map[string]any{"name": cfg.Name, "version": version, "api_version": apiVersion})
 			_, err := fmt.Println(string(b))
 			return err
 		}

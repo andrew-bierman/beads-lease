@@ -104,3 +104,108 @@ func TestVersionJSON(t *testing.T) {
 		t.Errorf("api_version = %v (want integer 1)", v["api_version"])
 	}
 }
+
+type check struct {
+	Name, Status, Detail, Fix string
+}
+
+func doctor(t *testing.T, s *sandbox, env map[string]string) ([]check, int) {
+	t.Helper()
+	out, _, code := s.run(env, "doctor", "--json")
+	var cs []check
+	if err := json.Unmarshal([]byte(out), &cs); err != nil {
+		t.Fatalf("not a JSON array: %v\n%s", err, out)
+	}
+	return cs, code
+}
+
+func find(t *testing.T, cs []check, name string) check {
+	t.Helper()
+	for _, c := range cs {
+		if c.Name == name {
+			return c
+		}
+	}
+	t.Fatalf("no check %q in %+v", name, cs)
+	return check{}
+}
+
+func TestDoctorHealthy(t *testing.T) {
+	s := newSandbox(t, "")
+	cs, code := doctor(t, s, nil)
+	if code != 0 {
+		t.Fatalf("exit %d: %+v", code, cs)
+	}
+	for _, n := range []string{"actor", "config", "coord", "hub"} {
+		if c := find(t, cs, n); c.Status != "ok" || c.Detail == "" {
+			t.Errorf("%s = %+v", n, c)
+		}
+	}
+	// The probe must be strictly read-only.
+	calls := s.coordCalls()
+	if len(calls) == 0 {
+		t.Fatal("expected a probe call")
+	}
+	for _, c := range calls {
+		if c != "list --json" {
+			t.Errorf("non-read-only coord call %q in %v", c, calls)
+		}
+	}
+}
+
+func TestDoctorFailingChecksExit1AndPrintEverything(t *testing.T) {
+	s := newSandbox(t, "")
+	cs, code := doctor(t, s, map[string]string{"BEADS_ACTOR": "", "BEADS_LEASE_COORD": "/nonexistent/coord"})
+	if code != 1 {
+		t.Fatalf("exit %d, want 1", code)
+	}
+	if c := find(t, cs, "actor"); c.Status != "fail" || c.Fix == "" {
+		t.Errorf("actor = %+v", c)
+	}
+	if c := find(t, cs, "coord"); c.Status != "fail" || c.Fix == "" {
+		t.Errorf("coord = %+v", c)
+	}
+	if c := find(t, cs, "hub"); c.Status != "skip" {
+		t.Errorf("hub should skip when prerequisites fail: %+v", c)
+	}
+	if len(s.coordCalls()) != 0 {
+		t.Error("coord must not be called when prerequisites fail")
+	}
+}
+
+func TestDoctorNotExecutableCoordFails(t *testing.T) {
+	s := newSandbox(t, "")
+	os.Chmod(s.coord, 0o644)
+	cs, code := doctor(t, s, nil)
+	if code != 1 || find(t, cs, "coord").Status != "fail" {
+		t.Fatalf("code=%d %+v", code, cs)
+	}
+}
+
+func TestDoctorBrokenConfigWarnsNotFails(t *testing.T) {
+	s := newSandbox(t, "")
+	cfg := filepath.Join(s.home, "bad.json")
+	os.WriteFile(cfg, []byte("not json"), 0o600)
+	cs, code := doctor(t, s, map[string]string{"BEADS_LEASE_CONFIG": cfg})
+	if code != 0 {
+		t.Fatalf("a warn must not exit 1: %d", code)
+	}
+	if c := find(t, cs, "config"); c.Status != "warn" || !strings.Contains(c.Detail, "not valid JSON") {
+		t.Errorf("config = %+v", c)
+	}
+}
+
+func TestDoctorHubProbeFailure(t *testing.T) {
+	s := newSandbox(t, "echo boom >&2; exit 3")
+	cs, code := doctor(t, s, nil)
+	if code != 1 || find(t, cs, "hub").Status != "fail" {
+		t.Fatalf("code=%d %+v", code, cs)
+	}
+}
+
+func TestDoctorText(t *testing.T) {
+	out, _, code := newSandbox(t, "").run(nil, "doctor")
+	if code != 0 || !strings.Contains(out, "ok") || !strings.Contains(out, "coord") || strings.HasPrefix(out, "[") {
+		t.Fatalf("code=%d out=%q", code, out)
+	}
+}
