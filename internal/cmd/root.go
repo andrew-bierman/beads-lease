@@ -3,6 +3,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -108,6 +109,11 @@ var versionCmd = &cobra.Command{
 	Short: "print version and identity",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg := config.Load()
+		if jsonOut {
+			b, _ := json.Marshal(map[string]any{"name": cfg.Name, "version": version, "api_version": 1})
+			_, err := fmt.Println(string(b))
+			return err
+		}
 		_, err := fmt.Printf("%s %s — %s\n", cfg.Name, version, cfg.Tagline)
 		return err
 	},

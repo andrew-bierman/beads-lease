@@ -48,6 +48,8 @@ beads-lease acquire deploy-slot -w 2m
 
 beads-lease status                                # every lease in the hub
 beads-lease --json list                           # one JSON envelope
+
+beads-lease version [--json]                      # --json: {name, version, api_version}
 ```
 
 Legacy `lease` surface is kept: `beads-lease <resource> [minutes] [note...]`,
