@@ -48,6 +48,9 @@ beads-lease acquire deploy-slot -w 2m
 
 beads-lease status                                # every lease in the hub
 beads-lease --json list                           # one JSON envelope
+
+beads-lease version [--json]                      # --json: {name, version, api_version}
+beads-lease doctor [--json]                       # read-only health checks
 ```
 
 Legacy `lease` surface is kept: `beads-lease <resource> [minutes] [note...]`,
@@ -112,6 +115,27 @@ defaults — a broken config never breaks the tool.
 | `2` | ownership/contention (already-claimed, not-yours) |
 | `64` | invalid input or configuration |
 | `130` | interrupted |
+
+`doctor` exits `1` only when a check is `fail` (it still prints the whole
+report); warnings and skips exit `0`.
+
+## Tool contract
+
+beads-lease follows the Beads-family tool contract (abacus `docs/tool-contract.md`)
+so umbrella tools can compose it without parsing prose:
+
+- `beads-lease version --json` prints `{"name","version","api_version"}`.
+  `api_version` is an integer, currently `1` (same as the `--json list`
+  envelope's `schemaVersion`); it is bumped only for breaking changes to the
+  `--json` surfaces. The plain `version` line is unchanged.
+- `beads-lease doctor [--json]` prints an array of
+  `{"name","status","detail","fix"?}` with `status` one of `ok`, `warn`,
+  `fail`, `skip`. Checks: `actor` (identity env var set), `config` (file
+  parses; a broken one is a `warn` since defaults apply), `coord` (wrapper
+  exists and is executable), `hub` (wrapper answers `list --json`; skipped
+  when the actor or wrapper check failed). Doctor is strictly read-only: the
+  only hub call is `coord list --json` — never claim, release, heartbeat,
+  create, update or sync.
 
 ## What was copied from worklease — and what wasn't
 

@@ -3,6 +3,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -50,7 +51,7 @@ Identity and policy come from %s; naming is configurable there.`,
 		SilenceErrors: true,
 	}
 	root.PersistentFlags().BoolVarP(&jsonOut, "json", "j", false, "print one JSON envelope instead of text")
-	root.AddCommand(acquireCmd, releaseCmd, statusCmd, listCmd, heartbeatCmd, runCmd, versionCmd)
+	root.AddCommand(acquireCmd, releaseCmd, statusCmd, listCmd, heartbeatCmd, runCmd, versionCmd, doctorCmd)
 	return root
 }
 
@@ -97,7 +98,7 @@ func Execute(args []string) int {
 func isKnown(s string) bool {
 	switch s {
 	case "acquire", "claim", "release", "status", "list", "ls",
-		"heartbeat", "run", "exec", "version", "help", "completion":
+		"heartbeat", "run", "exec", "version", "doctor", "help", "completion":
 		return true
 	}
 	return false
@@ -108,6 +109,11 @@ var versionCmd = &cobra.Command{
 	Short: "print version and identity",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg := config.Load()
+		if jsonOut {
+			b, _ := json.Marshal(map[string]any{"name": cfg.Name, "version": version, "api_version": apiVersion})
+			_, err := fmt.Println(string(b))
+			return err
+		}
 		_, err := fmt.Printf("%s %s — %s\n", cfg.Name, version, cfg.Tagline)
 		return err
 	},

@@ -187,3 +187,6 @@ func (c *Config) Actor() string {
 	}
 	return ""
 }
+
+// LoadWarning is the warning Load recorded for the active config file ("" if none).
+func LoadWarning() string { Load(); return loadWarn }
